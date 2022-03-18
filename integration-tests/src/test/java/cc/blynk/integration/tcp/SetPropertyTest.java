@@ -477,4 +477,24 @@ public class SetPropertyTest extends SingleServerInstancePerTest {
         assertEquals(600084223, widget.color);
     }
 
+    @Test
+    public void testSetOpacityForImageWidget() throws Exception {
+        clientPair.appClient.createWidget(1, "{\"id\":102, \"width\":1, \"height\":1, \"x\":5, \"y\":0, \"tabId\":0, \"label\":\"Some Text\", \"type\":\"IMAGE\", \"urls\":[\"https://blynk.cc/123.jpg\"], \"pinType\":\"VIRTUAL\", \"pin\":17}");
+        clientPair.appClient.verifyResult(ok(1));
+
+        clientPair.hardwareClient.setProperty(17, "opacity", "75");
+        clientPair.hardwareClient.verifyResult(ok(1));
+        verify(clientPair.appClient.responseMock, timeout(500)).channelRead(any(), eq(setProperty(1, "1-0 17 opacity 75")));
+
+        clientPair.appClient.reset();
+        clientPair.appClient.send("loadProfileGzipped");
+        Profile profile = clientPair.appClient.parseProfile(1);
+
+        Widget widget = profile.dashBoards[0].findWidgetByPin(0, (short) 17, PinType.VIRTUAL);
+        assertNotNull(widget);
+        assertTrue(widget instanceof Image);
+        Image imageWidget = (Image) widget;
+
+        assertEquals(75, imageWidget.opacity);
+    }
 }
